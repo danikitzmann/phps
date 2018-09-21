@@ -1,0 +1,88 @@
+<?php
+	class solicitacao_ctr (){
+		private $id_solicitacao;
+		private $data_solicitacao;
+		private $solicitante;
+		private $status;
+		private $caixa;
+		private $a_s_c_o = array(); //$aprovacao_solicitacao_ctr_ocorrencias
+		
+		public solicitacao_ctr ($id_solicitacao=null){
+			$this->id_solicitacao = $id_solicitacao;
+			if($id_solicitacao !== null){
+				$dao_ctr = dao_get_solicitacao_ctr($id_solicitacao);
+				$this->data_solicitacao = $dao_ctr['data_solicitacao'];
+				$this->solicitante = $dao_ctr['solicitante'];
+				$this->status = $dao_ctr['status'];
+				$this->caixa = $dao_ctr['caixa'];
+				
+				$dao_aprovacao = dao_get_historico_aprovacao_solicitacao_ctr($this->id_solicitacao);
+				for($i=0; i<count($dao_aprovacao); $i++){
+					$a_s_c_o[] = new aprovacao_solicitacao_ctr ($dao_aprovacao[$i]);
+				}
+			}
+		}
+	}
+	class aprovacao_solicitacao_ctr (){
+		private $id_ocorrencia;		
+		private $data_ocorrencia;
+		private $registrante_ocorrencia;
+		private $mensagem_ocorrencia;		
+		
+		public aprovacao_solicitacao_ctr ($ocorrencia){
+			$this->id_ocorrencia = $ocorrencia['id'];		
+			$this->data_ocorrencia = $ocorrencia['data'];
+			$this->registrante_ocorrencia = $ocorrencia['registrante'];
+			$this->mensagem_ocorrencia = $ocorrencia['mensagem'];							
+		}
+		
+	}
+	class ctr () {
+		private $id_ctr;
+		private $id_solicitacao;
+		private $data_incio;
+		private $data_validade;
+		
+		public ctr($id_ctr){
+			$this->id_ctr = $id_ctr;
+			$dao_ctr = dao_get_ctr($id_ctr);
+			$this->id_solicitacao = $dao_ctr['id_solicitacao'];
+			$this->data_inicio = $dao_ctr['data_inicio'];
+			$this->data_validade = $dao_ctr['data_validade'];
+		}
+	}
+
+	function load_screen($perfil, $usr){
+		$acompanhar_minhas_solicitacoes = dao_get_minhas_solicitacoes($usr);
+		$ver_meu_inventario = dao_get_meu_inventario($usr);	
+		
+		carrega_solicitar_nova_carta_de_risco_para_div($usr);
+		carrega_minhas_solicitacaoes_para_div($acompanhar_minhas_solicitacoes);
+		carrega_meu_inventario_para_div($ver_meu_inventario);
+				
+		switch ($perfil) {
+			case "solicitante":				
+				break;
+			case "seginfo":
+				$fila_seginfo_todas = 	dao_get_fila_seginfo_todas();	
+				
+				break;
+			case "aprovador":
+						
+				
+				break;
+		}
+	}
+	
+	$perfil = array("solicitante");
+	$usr = get_user_id_from_auth();
+	if( in_array("aprovador", $usr->tipo){
+		$perfil[] = "aprovador";
+	}
+	if ( $usr->tipo($usr->tipo == "seginfo"){
+		$perfil[] = "seginfo";
+	}
+	for ($i=0; $i<count($perfil); $i++){
+		load_screen($perfil[$i], $usr);
+	}
+?>
